@@ -69,6 +69,7 @@ object PostgisLibrary {
 
   // Outputs
   val AsEWKT = new GeoFunction("ST_AsEWKT")
+  val AsEWKB = new GeoFunction("ST_AsEWKB")
   val AsEHEXEWKB = new GeoFunction("ST_AsEHEXEWKB")
   val AsSVG = new GeoFunction("ST_AsSVG")
   val AsGML = new GeoFunction("ST_AsGML")
@@ -132,19 +133,19 @@ final class GeometryColumnExtensionMethods[P1](val c: Column[P1]) extends AnyVal
   // processing
 
   def centroid[P2, R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.Centroid.column(n, Node(e)))    
+    om(PostgisLibrary.Centroid.column(n))    
 
   def area[P2, R](e: Column[P2])(implicit om: o#to[Double, R]) =
-    om(PostgisLibrary.Area.column(n, Node(e)))    
+    om(PostgisLibrary.Area.column(n))    
 
   def length[P2, R](e: Column[P2])(implicit om: o#to[Double, R]) =
-    om(PostgisLibrary.Length.column(n, Node(e)))    
+    om(PostgisLibrary.Length.column(n))    
 
   def pointOnSurface[P2, R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.PointOnSurface.column(n, Node(e)))
+    om(PostgisLibrary.PointOnSurface.column(n))
 
   def convexHull[P2,R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.ConvexHull.column(n, Node(e)))    
+    om(PostgisLibrary.ConvexHull.column(n))    
 
   def intersection[P2,R](e: Column[P2])(implicit om: o#arg[Geometry,P2]#to[Geometry, R]) =
     om(PostgisLibrary.Intersection.column(n, Node(e)))    
@@ -162,44 +163,44 @@ final class GeometryColumnExtensionMethods[P1](val c: Column[P1]) extends AnyVal
     om(PostgisLibrary.MemUnion.column(n, Node(e)))    
 
   def shiftLongitude[P2,R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.ShiftLongitude.column(n, Node(e)))    
+    om(PostgisLibrary.ShiftLongitude.column(n))    
 
   def buffer[P2,R](e: Column[P2])(implicit om: o#arg[Int,P2]#to[Geometry, R]) =
     om(PostgisLibrary.Buffer.column(n, Node(e)))    
 
   // Accessors
   def asText[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsText.column(n, Node(e)))    
+    om(PostgisLibrary.AsText.column(n))    
 
   def srid[P2,R](e: Column[P2])(implicit om: o#to[Int, R]) =
-    om(PostgisLibrary.SRID.column(n, Node(e)))    
+    om(PostgisLibrary.SRID.column(n))    
 
   def dimension[P2,R](e: Column[P2])(implicit om: o#to[Int, R]) =
-    om(PostgisLibrary.Dimension.column(n, Node(e)))    
+    om(PostgisLibrary.Dimension.column(n))    
 
   def envelope[P2,R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.Envelope.column(n, Node(e)))    
+    om(PostgisLibrary.Envelope.column(n))    
 
   def isEmpty[P2,R](e: Column[P2])(implicit om: o#to[Boolean, R]) =
-    om(PostgisLibrary.IsEmpty.column(n, Node(e)))    
+    om(PostgisLibrary.IsEmpty.column(n))    
 
   def isSimple[P2,R](e: Column[P2])(implicit om: o#to[Boolean, R]) =
-    om(PostgisLibrary.IsSimple.column(n, Node(e)))    
+    om(PostgisLibrary.IsSimple.column(n))    
 
   def isClosed[P2,R](e: Column[P2])(implicit om: o#to[Boolean, R]) =
-    om(PostgisLibrary.IsClosed.column(n, Node(e)))    
+    om(PostgisLibrary.IsClosed.column(n))    
 
   def isRing[P2,R](e: Column[P2])(implicit om: o#to[Boolean, R]) =
-    om(PostgisLibrary.IsRing.column(n, Node(e)))    
+    om(PostgisLibrary.IsRing.column(n))    
 
   def numGeometries[P2,R](e: Column[P2])(implicit om: o#to[Int, R]) =
-    om(PostgisLibrary.NumGeometries.column(n, Node(e)))    
+    om(PostgisLibrary.NumGeometries.column(n))    
 
   def geometryN[P2,R](e: Column[P2])(implicit om: o#arg[Int,P2]#to[Geometry, R]) =
     om(PostgisLibrary.GeometryN.column(n, Node(e)))    
 
   def numPoints[P2,R](e: Column[P2])(implicit om: o#to[Int, R]) =
-    om(PostgisLibrary.NumPoints.column(n, Node(e)))    
+    om(PostgisLibrary.NumPoints.column(n))    
 
   def pointN[P2,R](e: Column[P2])(implicit om: o#arg[Int,P2]#to[Geometry, R]) =
     om(PostgisLibrary.PointN.column(n, Node(e)))    
@@ -208,50 +209,53 @@ final class GeometryColumnExtensionMethods[P1](val c: Column[P1]) extends AnyVal
     om(PostgisLibrary.PointN.column(n, Node(e)))    
 
   def numInteriorRings[P2,R](e: Column[P2])(implicit om: o#to[Int, R]) =
-    om(PostgisLibrary.NumInteriorRings.column(n, Node(e)))    
+    om(PostgisLibrary.NumInteriorRings.column(n))    
 
   def interiorRingN[P2,R](e: Column[P2])(implicit om: o#arg[Int,P2]#to[Geometry, R]) =
     om(PostgisLibrary.InteriorRingN.column(n, Node(e)))    
 
   def endPoint[P2,R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.EndPoint.column(n, Node(e)))    
+    om(PostgisLibrary.EndPoint.column(n))    
 
   def startPoint[P2,R](e: Column[P2])(implicit om: o#to[Geometry, R]) =
-    om(PostgisLibrary.StartPoint.column(n, Node(e)))    
+    om(PostgisLibrary.StartPoint.column(n))    
 
   def geometryType[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.GeometryType.column(n, Node(e)))    
+    om(PostgisLibrary.GeometryType.column(n))    
 
   def x[P2,R](e: Column[P2])(implicit om: o#to[Double, R]) =
-    om(PostgisLibrary.X.column(n, Node(e)))    
+    om(PostgisLibrary.X.column(n))    
 
   def y[P2,R](e: Column[P2])(implicit om: o#to[Double, R]) =
-    om(PostgisLibrary.Y.column(n, Node(e)))    
+    om(PostgisLibrary.Y.column(n))    
 
   def z[P2,R](e: Column[P2])(implicit om: o#to[Double, R]) =
-    om(PostgisLibrary.Z.column(n, Node(e)))    
+    om(PostgisLibrary.Z.column(n))    
 
   def m[P2,R](e: Column[P2])(implicit om: o#to[Double, R]) =
-    om(PostgisLibrary.M.column(n, Node(e)))    
+    om(PostgisLibrary.M.column(n))    
 
   // Outputs
   def asEWKT[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsEWKT.column(n, Node(e)))    
+    om(PostgisLibrary.AsEWKT.column(n))    
 
+  def asEWKB[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
+    om(PostgisLibrary.AsEWKB.column(n))
+    
   def asEHEXEWKB[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsEHEXEWKB.column(n, Node(e)))    
+    om(PostgisLibrary.AsEHEXEWKB.column(n))    
 
   def asSVG[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsSVG.column(n, Node(e)))    
+    om(PostgisLibrary.AsSVG.column(n))    
 
   def asGML[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsGML.column(n, Node(e)))    
+    om(PostgisLibrary.AsGML.column(n))    
 
   def asKML[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsKML.column(n, Node(e)))    
+    om(PostgisLibrary.AsKML.column(n))    
 
   def asGeoJson[P2,R](e: Column[P2])(implicit om: o#to[String, R]) =
-    om(PostgisLibrary.AsGeoJson.column(n, Node(e)))    
+    om(PostgisLibrary.AsGeoJson.column(n))    
 
   // Operators
   def ===[P2,R](e: Column[P2])(implicit om: o#arg[Geometry,P2]#to[Boolean, R]) =

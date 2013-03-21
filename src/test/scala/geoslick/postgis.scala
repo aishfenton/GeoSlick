@@ -10,7 +10,7 @@ import com.vividsolutions.jts.io.WKTReader
 
 import util._
 
-class PostgisSpec extends FlatSpec with ShouldMatchers {
+class PostgisSpec extends FlatSpec {
 
   object SimpleCity extends PostgisTable[(Int,String)]("cities") {
     
@@ -54,17 +54,17 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
 
       val q = for { c <- SimpleCity } yield c.name
 
-      q.list should equal (cities)
+      assert(q.list==cities)
 
       val q2 = for { c <- SimpleCity if c.id > 1 } yield c
       q2.delete
 
-      { for { c <- SimpleCity } yield c }.list.length should equal (1)
+      assert({ for { c <- SimpleCity } yield c }.list.length == 1)
 
       val q3 = for { c <- SimpleCity } yield c
       q3.delete
 
-      { for { c <- SimpleCity } yield c }.list.length should equal (0)
+      assert({ for { c <- SimpleCity } yield c }.list.length == 0)
 
       SimpleCity.ddl.drop
     }
@@ -79,9 +79,12 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
       City.ddl.create
       City.forInsert.insertAll(data:_*)
 
-      val q = for { c <- City } yield (c.name, c.geom)
-
-      q.list should equal (data.toList)
+      val q = for { c <- City } yield (c.name, c.geom.asEWKB())
+      
+      info(q.selectStatement)
+      info(q.list.toString)
+      info(data.toList.toString)
+      assert(q.list==data.toList)
                                   
       City.ddl.drop
     }
@@ -97,13 +100,13 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
       City.forInsert.insertAll(data:_*)
 
       val q1 = for { c <- City } yield c
-      q1.list.length should equal (data.length)
+      assert(q1.list.length == data.length)
 
       val q2 = for { c <- City } yield c
       q2.delete
 
       val q3 = for { c <- City } yield c
-      q3.list.length should equal (0)
+      assert(q3.list.length == 0)
                                   
       City.ddl.drop    
     }
@@ -125,7 +128,7 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
       q.delete
 
       val q2 = for { c <- City } yield c.name
-      q2.list should equal (data.map(_._1).filter(_ != "Altoona,PA").toList)
+      assert(q2.list == data.map(_._1).filter(_ != "Altoona,PA").toList)
 
       City.insert(4000, "ATown",pt(-55.1,23.3))
 
@@ -133,7 +136,7 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
       q3.delete
 
       val q4 = for { c <- City } yield c.name
-      q4.list should equal (List("ATown"))
+      assert(q4.list == List("ATown"))
                                   
       City.ddl.drop    
     }
@@ -146,18 +149,19 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
       try { City.ddl.drop } catch { case e: Throwable =>  }
 
       City.ddl.create
+      City.ddl.createStatements.foreach(info(_))
       City.forInsert.insertAll(data:_*)
 
       // 40.30, 78.32 -> Altoona,PA
       val bbox = bboxBuffer(78.32, 40.30, 0.01)
-      
+      info("a")
       // Operator
       val q = for {
           c <- City if c.geom && bbox // && -> overlaps
         } yield c.name
 
-      q.list should equal (List("Altoona,PA"))
-      
+      assert(q.list == List("Altoona,PA"))
+      info("a")
       // Function
       val dist = 0.5
       val q2 = for {
@@ -165,23 +169,26 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
           c2 <- City if c1.geom.distance(c2.geom) < dist && c1.name =!= c2.name
         } yield (c1.name, c2.name, c1.geom.distance(c2.geom))
 
+      info(q2.selectStatement)
+        
       val q2format = q2.list map {
           case (n1,n2,d) => (n1,n2,"%1.4f" format d)
         }
-
+      info("a")
       val jts = for {
           j1 <- data
           j2 <- data if j1._2.distance(j2._2) < dist && j1._1 != j2._1
         } yield (j1._1, j2._1, "%1.4f" format j1._2.distance(j2._2))
 
-      q2format should equal (jts.toList)
+      assert(q2format == jts.toList)
           
       // Output function
       val q3 = for {
           c <- City if c.name === "Reading,PA"
         } yield c.geom.asGeoJson()
 
-      q3.first should equal ("""{"type":"Point","coordinates":[76,40.4]}""")
+      info("a")
+      assert(q3.first == """{"type":"Point","coordinates":[76,40.4]}""")
 
       City.ddl.drop
     }
@@ -213,13 +220,13 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
           c <- OptCity if c.geom isNull
         } yield (c.name, c.geom)
 
-      q1.list should equal (List(("london",None)))
+      assert(q1.list == List(("london",None)))
 
       val q2 = for {
           c <- OptCity if c.geom isNotNull
         } yield c.name
 
-      q2.list should equal (List("washington","paris"))
+      assert(q2.list == List("washington","paris"))
 
       OptCity.ddl.drop
     }
@@ -245,7 +252,7 @@ class PostgisSpec extends FlatSpec with ShouldMatchers {
           c <- OptCity if c.geom && bbox // && -> overlaps
         } yield c.name
 
-      q.list should equal (List("Altoona,PA"))
+      assert(q.list == List("Altoona,PA"))
 
       OptCity.ddl.drop
     }
