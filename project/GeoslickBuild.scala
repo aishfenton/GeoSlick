@@ -22,7 +22,7 @@ object GeoslickBuild extends Build {
         "com.typesafe.slick" %% "slick" % "1.0.0",
         "postgresql" % "postgresql" % "9.1-901.jdbc4",
         "com.vividsolutions" % "jts" % "1.13",
-        "org.scalatest" % "scalatest_2.9.0" % "2.0.M5" % "test"),
+	"org.scalatest" %% "scalatest" % "1.9.1" % "test"),
       scalacOptions ++= Seq("-encoding", "UTF-8", "-deprecation", "-unchecked"),
       javacOptions ++= Seq("-Xlint:unchecked", "-Xlint:deprecation"),
       parallelExecution in Test := false,
