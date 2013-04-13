@@ -104,7 +104,7 @@ final class GeometryColumnExtensionMethods[P1](val c: Column[P1]) extends AnyVal
     om(PostgisLibrary.Disjoint.column(n, Node(e)))    
 
   def intersects[P2,R](e: Column[P2])(implicit om: o#arg[Geometry, P2]#to[Boolean, R]) =
-    om(PostgisLibrary.Intersects.column(n, Node(e)))    
+    om(PostgisLibrary.Intersects.column(n))    
 
   def touches[P2,R](e: Column[P2])(implicit om: o#arg[Geometry, P2]#to[Boolean, R]) =
     om(PostgisLibrary.Touches.column(n, Node(e)))    
