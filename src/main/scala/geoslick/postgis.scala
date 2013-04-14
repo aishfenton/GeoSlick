@@ -105,7 +105,8 @@ trait PostgisDriver extends PostgresDriver {
 
     def geoColumn[C](n: String, srid: Int)(implicit gt: GeoTypeBase[C]): Column[gt.ColumnType] = {
       val col = column[gt.ColumnType](n, gt.asGeom, SRID(srid))(gt.mapper)
-      wrapEWKB(col)(gt.mapper)
+      //wrapEWKB(col)(gt.mapper)
+      col
     }
 
     @inline implicit def geoTypeToOptionGeoType[T](implicit gt: GeoTypeBase[T]): OptionGeoType[T] =
