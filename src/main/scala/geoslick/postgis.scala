@@ -90,9 +90,9 @@ trait PostgisDriver extends PostgresDriver {
 
   trait Postgis { self: Table[_] =>
     val cast[C] = SimpleExpression.unary[C] { (x, qb) =>
-      qb.sqlBuilder += 'CAST ('
+      qb.sqlBuilder += "CAST ("
       qb.expr(x)
-      qb.sqlBuilder += ' AS GEOMETRY'
+      qb.sqlBuilder += " AS GEOMETRY"
     }
 
     // Take a column and wrap it with a function that is called
