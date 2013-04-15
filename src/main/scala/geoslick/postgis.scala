@@ -89,6 +89,12 @@ trait PostgisDriver extends PostgresDriver {
   }
 
   trait Postgis { self: Table[_] =>
+    val cast[C] = SimpleExpression.unary[C] { (x, qb) =>
+      qb.sqlBuilder += 'CAST ('
+      qb.expr(x)
+      qb.sqlBuilder += ' AS GEOMETRY'
+    }
+
     // Take a column and wrap it with a function that is called
     // only on select. In this case, geometry fields get wrapped
     // with ST_AsEWKB on select and are inserted as raw bytes
@@ -105,8 +111,7 @@ trait PostgisDriver extends PostgresDriver {
 
     def geoColumn[C](n: String, srid: Int)(implicit gt: GeoTypeBase[C]): Column[gt.ColumnType] = {
       val col = column[gt.ColumnType](n, gt.asGeom, SRID(srid))(gt.mapper)
-      //wrapEWKB(col)(gt.mapper)
-      col
+      cast(wrapEWKB(col)(gt.mapper))
     }
 
     @inline implicit def geoTypeToOptionGeoType[T](implicit gt: GeoTypeBase[T]): OptionGeoType[T] =
