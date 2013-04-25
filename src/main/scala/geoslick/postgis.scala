@@ -89,12 +89,6 @@ trait PostgisDriver extends PostgresDriver {
   }
 
   trait Postgis { self: Table[_] =>
-    val cast[C] = SimpleExpression.unary[C] { (x, qb) =>
-      qb.sqlBuilder += "CAST ("
-      qb.expr(x)
-      qb.sqlBuilder += " AS GEOMETRY"
-    }
-
     // Take a column and wrap it with a function that is called
     // only on select. In this case, geometry fields get wrapped
     // with ST_AsEWKB on select and are inserted as raw bytes
@@ -106,12 +100,22 @@ trait PostgisDriver extends PostgresDriver {
           SelectOnlyApply(c.nodeDelegate, this, ch, implicitly[TypeMapper[T]])
        }.column(c.nodeDelegate)(tm)
 
+    /* This creates an unknown WKB error
+    def wrapColumnWithSelectOnlyCast[C](c: Column[C])(implicit tm: TypeMapper[C]) =
+      new Library.SqlOperator("::") {
+        override def typed(tpe: Type, ch: Node*): Apply with TypedNode =
+          SelectOnlyApply(c.nodeDelegate, this, ch, tpe)
+        override def typed[T : TypeMapper](ch: Node*): Apply with TypedNode =
+          SelectOnlyApply(c.nodeDelegate, this, ch, implicitly[TypeMapper[T]])
+       }.column(c.nodeDelegate, SimpleLiteral("GEOMETRY"))(tm)
+    */
+
     def wrapEWKB[C](c: Column[C])(implicit tm: TypeMapper[C]): Column[C] =
       wrapColumnWithSelectOnlyFunction(c, "ST_AsEWKB")
 
     def geoColumn[C](n: String, srid: Int)(implicit gt: GeoTypeBase[C]): Column[gt.ColumnType] = {
       val col = column[gt.ColumnType](n, gt.asGeom, SRID(srid))(gt.mapper)
-      cast(wrapEWKB(col)(gt.mapper))
+      wrapEWKB(col)(gt.mapper)
     }
 
     @inline implicit def geoTypeToOptionGeoType[T](implicit gt: GeoTypeBase[T]): OptionGeoType[T] =
@@ -182,7 +186,7 @@ trait PostgisDriver extends PostgresDriver {
           if(table eq null) table = t.tableName
           else if(table != t.tableName) throw new SlickException("Inserts must all be to the same table")
           cols += field
-        }
+      }
       f(node)
       if(table eq null) throw new SlickException("No table to insert into")
       new PartsResult(table, cols)
@@ -362,6 +366,18 @@ trait PostgisDriver extends PostgresDriver {
               }
             }
       }
+
+    // this is rather ugly, but we need it to get rid of the ambiguity, and if we are using templates
+    // then this only gets computed once.
+    override protected def buildWhereClause(where: Seq[Node]) = {
+      def unwrapSelectOnly(n: Node): Node = n match {
+        case Apply(x: Library.SqlFunction,ch) if x.name == "ST_AsEWKB" => ch.head
+        case x if !x.nodeChildren.isEmpty                              => x.nodeMapChildren(unwrapSelectOnly _)
+        case x                                                         => x
+      }
+
+      super.buildWhereClause(where.map { unwrapSelectOnly _ })
+    }
 
     // Note--- we could also traverse here and remove the extra "As_EWKT" call
     // TODO: Add in a compiler phase for this? Custom selects?

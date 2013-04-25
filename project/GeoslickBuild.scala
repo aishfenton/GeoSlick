@@ -6,7 +6,7 @@ import sbtrelease.ReleasePlugin._
 object GeoslickBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
     organization := "com.azavea.geotrellis",
-    version := "0.1.1-SNAPSHOT",
+    version := "0.1.2-SNAPSHOT",
     scalaVersion := "2.10.0"
   )
 
