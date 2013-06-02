@@ -40,7 +40,7 @@ trait PostgisDriver extends PostgresDriver {
         o => o.getOrElse(null))
   }
 
-  class SimpleQL extends super.SimpleQL with Implicits {
+  trait SimpleQL extends super.SimpleQL with Implicits {
     type Postgis = PostgisDriver.Postgis
     type PostgisTable[T] = PostgisDriver.PostgisTable[T]
   }
@@ -50,7 +50,7 @@ trait PostgisDriver extends PostgresDriver {
     def this(tblName: String) = this(None, tblName)
   }
 
-  override val simple = new SimpleQL
+  override val simple = new SimpleQL {}
 
   import simple._
 
