@@ -18,7 +18,7 @@ object GeoslickBuild extends Build {
         "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
         Resolver.sonatypeRepo("snapshots")),
       libraryDependencies ++= Seq(
-        "org.slf4j" % "slf4j-api" % "1.6.4",
+        "org.slf4j" % "slf4j-api" % "1.7.5",
         "com.typesafe.slick" %% "slick" % "1.0.0",
         "postgresql" % "postgresql" % "9.1-901.jdbc4",
         "com.vividsolutions" % "jts" % "1.13",

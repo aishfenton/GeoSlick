@@ -379,9 +379,7 @@ trait PostgisDriver extends PostgresDriver {
       super.buildWhereClause(where.map { unwrapSelectOnly _ })
     }
 
-    // Note--- we could also traverse here and remove the extra "As_EWKT" call
-    // TODO: Add in a compiler phase for this? Custom selects?
-    override def buildDelete: QueryBuilderResult = {
+    private def unwrapC(f: (Node, Option[Seq[Node]]) => QueryBuilderResult) =
       input.ast match {
         case Comprehension(Seq((sym, c@Comprehension(Seq((_,TableNode(tbl))),_,_,_,_,_,_))),
                            where: Seq[Node],
@@ -392,11 +390,53 @@ trait PostgisDriver extends PostgresDriver {
           evalAnnonPathsInInnerStruct(c)
           symbolName(sym) = quoteIdentifier(tbl)
           
-          createDeleteSet(c, Some(where))
+          f(c, Some(where))
         }
-        case o =>
-          createDeleteSet(o)
+        case o => f(o,None)
       }
+
+    override def buildUpdate: QueryBuilderResult = {
+      unwrapC { case (c,w) => createUpdateSet(c,w) }
+    }
+
+    // Note--- we could also traverse here and remove the extra "As_EWKT" call
+    // TODO: Add in a compiler phase for this? Custom selects?
+    override def buildDelete: QueryBuilderResult = {
+      unwrapC { case (c,w) => createDeleteSet(c,w) }
+    }
+
+    def createUpdateSet(c: Node, wOpt: Option[Seq[Node]] = None) = {
+      def prod(sym: Symbol, n: Node): Boolean = n match {
+        case Select(Ref(struct), _) if struct == sym => true
+        case SelectOnlyApply(x)                      => prod(sym,x)
+        case x                                       => false
+      }
+
+      def extprod(n: Node): Symbol = n match {
+        case Select(Ref(_), field) => field 
+        case SelectOnlyApply(n)    => extprod(n)
+      }
+
+      val (gen, from, innerWhere, select) = c match {
+        case Comprehension(Seq((sym, from: TableNode)), where, None, _, Some(Pure(select)), None, None) => select match {
+          case f @ Select(Ref(struct), _) if struct == sym => (sym, from, where, Seq(f.field))
+          case ProductNode(ch) if ch.forall(prod(sym, _)) =>
+            (sym, from, where, ch.map(extprod _))
+          case _ => throw new SlickException("A query for an UPDATE statement must select table columns only -- Unsupported shape: "+select)
+        }
+        case o => throw new SlickException("A query for an UPDATE statement must resolve to a comprehension with a single table -- Unsupported shape: "+o)
+      }
+
+      val where       = wOpt.getOrElse(innerWhere)
+      val qtn         = quoteIdentifier(from.tableName)
+      symbolName(gen) = qtn // Alias table to itself because UPDATE does not support aliases
+      b"update $qtn set "
+      b.sep(select, ", ")(field => b += symbolName(field) += " = ?")
+      if(!where.isEmpty) {
+        b" where "
+        expr(where.reduceLeft((a, b) => Library.And.typed[Boolean](a, b)), true)
+      }
+      QueryBuilderResult(b.build,input.linearizer)
     }
 
     // this is pretty much right from slick
