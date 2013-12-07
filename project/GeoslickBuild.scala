@@ -1,7 +1,7 @@
 import sbt._
 import sbt.Keys._
 
-import sbtrelease.ReleasePlugin._
+//import sbtrelease.ReleasePlugin._
 
 object GeoslickBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
@@ -13,7 +13,8 @@ object GeoslickBuild extends Build {
   lazy val geoslick = Project(
     id = "geoslick",
     base = file("."),
-    settings = Project.defaultSettings ++ releaseSettings ++ Seq(
+    //settings = Project.defaultSettings ++ releaseSettings ++ Seq(
+    settings = Project.defaultSettings ++ Seq(
       resolvers ++= Seq(
         "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
         Resolver.sonatypeRepo("snapshots")),
